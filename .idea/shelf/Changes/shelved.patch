@@ -1,0 +1,390 @@
+Index: .idea/inspectionProfiles/profiles_settings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/inspectionProfiles/profiles_settings.xml b/.idea/inspectionProfiles/profiles_settings.xml
+new file mode 100644
+--- /dev/null	(date 1729845090633)
++++ b/.idea/inspectionProfiles/profiles_settings.xml	(date 1729845090633)
+@@ -0,0 +1,6 @@
++<component name="InspectionProjectProfileManager">
++  <settings>
++    <option name="USE_PROJECT_PROFILE" value="false" />
++    <version value="1.0" />
++  </settings>
++</component>
+\ No newline at end of file
+Index: src/main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/main.py b/src/main.py
+new file mode 100644
+--- /dev/null	(date 1729846268669)
++++ b/src/main.py	(date 1729846268669)
+@@ -0,0 +1,4 @@
++from gui import start_gui
++
++if __name__ == "__main__":
++    start_gui()
+Index: src/config.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/config.py b/src/config.py
+new file mode 100644
+--- /dev/null	(date 1729854104693)
++++ b/src/config.py	(date 1729854104693)
+@@ -0,0 +1,26 @@
++import json
++import os
++
++def read_config():
++    if not os.path.exists("./conf/config.json"):
++        return create_default_config()
++    with open('./conf/config.json', 'r', encoding='utf-8') as f:
++        config = json.load(f)
++    return config
++
++def create_default_config():
++    os.makedirs('./conf', exist_ok=True)
++    default_config = {
++        "comments": {
++            "userid": "学号+@xxxy+运营商缩写",
++            "运营商": "lt yd dx"
++        },
++        "UserInfo": {
++            "userid": "youruserid",
++            "passwd": "your_passwd",
++            "wlanacname": "XXXY-New-BRAS"
++        }
++    }
++    with open('./conf/config.json', 'w', encoding='utf-8') as f:
++        json.dump(default_config, f, ensure_ascii=False, indent=4)
++    return default_config
+Index: src/login.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/login.py b/src/login.py
+new file mode 100644
+--- /dev/null	(date 1729846234786)
++++ b/src/login.py	(date 1729846234786)
+@@ -0,0 +1,32 @@
++import requests
++import socket
++from config import read_config
++
++def get_local_ip():
++    try:
++        return socket.gethostbyname(socket.gethostname())
++    except Exception as e:
++        return None
++
++def login():
++    login_url = "http://172.25.100.210:6060/quickauth.do"
++    wlanuserip = get_local_ip()
++
++    config = read_config()
++
++    params = {
++        'userid': config["UserInfo"]["userid"],
++        'passwd': config["UserInfo"]["passwd"],
++        'wlanuserip': wlanuserip,
++        'wlanacname': config["UserInfo"]["wlanacname"],
++    }
++
++    try:
++        response = requests.get(login_url, params=params)
++        response.raise_for_status()
++        response_data = response.json()
++        return response_data, wlanuserip
++    except requests.RequestException as e:
++        return None, str(e)
++    except json.JSONDecodeError:
++        return None, "解析响应数据时出错"
+Index: src/gui.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/gui.py b/src/gui.py
+new file mode 100644
+--- /dev/null	(date 1729846247920)
++++ b/src/gui.py	(date 1729846247920)
+@@ -0,0 +1,29 @@
++import tkinter as tk
++from tkinter import messagebox
++from login import login
++
++def show_message(title, message):
++    messagebox.showinfo(title, message)
++
++def show_error(title, message):
++    messagebox.showerror(title, message)
++
++def start_gui():
++    root = tk.Tk()
++    root.title("登录界面")
++    root.geometry("300x150")
++
++    def on_login():
++        response_data, wlanuserip = login()
++        if response_data:
++            if response_data['code'] == '0':
++                show_message("成功", f"登录成功 局域网ip: {wlanuserip}")
++            else:
++                show_error("失败", f"登录失败，错误信息: {response_data['message']}")
++        else:
++            show_error("请求失败", wlanuserip)
++
++    login_button = tk.Button(root, text="登录", command=on_login)
++    login_button.pack(pady=20)
++
++    root.mainloop()
+Index: .idea/inspectionProfiles/Project_Default.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/inspectionProfiles/Project_Default.xml b/.idea/inspectionProfiles/Project_Default.xml
+new file mode 100644
+--- /dev/null	(date 1729845090362)
++++ b/.idea/inspectionProfiles/Project_Default.xml	(date 1729845090362)
+@@ -0,0 +1,14 @@
++<component name="InspectionProjectProfileManager">
++  <profile version="1.0">
++    <option name="myName" value="Project Default" />
++    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
++      <option name="ignoredPackages">
++        <value>
++          <list size="1">
++            <item index="0" class="java.lang.String" itemvalue="socket" />
++          </list>
++        </value>
++      </option>
++    </inspection_tool>
++  </profile>
++</component>
+\ No newline at end of file
+Index: .idea/AutoLogin.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/AutoLogin.iml b/.idea/AutoLogin.iml
+new file mode 100644
+--- /dev/null	(date 1729845090536)
++++ b/.idea/AutoLogin.iml	(date 1729845090536)
+@@ -0,0 +1,10 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<module type="PYTHON_MODULE" version="4">
++  <component name="NewModuleRootManager">
++    <content url="file://$MODULE_DIR$">
++      <excludeFolder url="file://$MODULE_DIR$/.venv" />
++    </content>
++    <orderEntry type="inheritedJdk" />
++    <orderEntry type="sourceFolder" forTests="false" />
++  </component>
++</module>
+\ No newline at end of file
+Index: .idea/modules.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/modules.xml b/.idea/modules.xml
+new file mode 100644
+--- /dev/null	(date 1729845090552)
++++ b/.idea/modules.xml	(date 1729845090552)
+@@ -0,0 +1,8 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="ProjectModuleManager">
++    <modules>
++      <module fileurl="file://$PROJECT_DIR$/.idea/AutoLogin.iml" filepath="$PROJECT_DIR$/.idea/AutoLogin.iml" />
++    </modules>
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+new file mode 100644
+--- /dev/null	(date 1729855828182)
++++ b/.idea/workspace.xml	(date 1729855828182)
+@@ -0,0 +1,129 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="AutoImportSettings">
++    <option name="autoReloadType" value="SELECTIVE" />
++  </component>
++  <component name="ChangeListManager">
++    <list default="true" id="88ca1a4c-7b7f-447c-a398-c23514ea4e9b" name="Changes" comment="">
++      <change afterPath="$PROJECT_DIR$/.idea/AutoLogin.iml" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/src/config.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/src/gui.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/src/login.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
++    </list>
++    <option name="SHOW_DIALOG" value="false" />
++    <option name="HIGHLIGHT_CONFLICTS" value="true" />
++    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
++    <option name="LAST_RESOLUTION" value="IGNORE" />
++  </component>
++  <component name="FileTemplateManagerImpl">
++    <option name="RECENT_TEMPLATES">
++      <list>
++        <option value="Python Script" />
++      </list>
++    </option>
++  </component>
++  <component name="Git.Settings">
++    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
++  </component>
++  <component name="ProjectColorInfo">{
++  &quot;associatedIndex&quot;: 0
++}</component>
++  <component name="ProjectId" id="2nvEJpeBjGziDctbtTVuseC8Kbg" />
++  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
++    <ConfirmationsSetting value="2" id="Add" />
++  </component>
++  <component name="ProjectViewState">
++    <option name="hideEmptyMiddlePackages" value="true" />
++    <option name="showLibraryContents" value="true" />
++  </component>
++  <component name="PropertiesComponent"><![CDATA[{
++  "keyToString": {
++    "Python.main.executor": "Run",
++    "RunOnceActivity.ShowReadmeOnStart": "true",
++    "git-widget-placeholder": "master",
++    "last_opened_file_path": "D:/ABC/grapic/AutoLogin",
++    "node.js.detected.package.eslint": "true",
++    "node.js.detected.package.tslint": "true",
++    "node.js.selected.package.eslint": "(autodetect)",
++    "node.js.selected.package.tslint": "(autodetect)",
++    "nodejs_package_manager_path": "npm",
++    "vue.rearranger.settings.migration": "true"
++  }
++}]]></component>
++  <component name="RunManager">
++    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
++      <module name="AutoLogin" />
++      <option name="ENV_FILES" value="" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <envs>
++        <env name="PYTHONUNBUFFERED" value="1" />
++      </envs>
++      <option name="SDK_HOME" value="" />
++      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
++      <option name="IS_MODULE_SDK" value="true" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
++      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/main.py" />
++      <option name="PARAMETERS" value="" />
++      <option name="SHOW_COMMAND_LINE" value="false" />
++      <option name="EMULATE_TERMINAL" value="false" />
++      <option name="MODULE_MODE" value="false" />
++      <option name="REDIRECT_INPUT" value="false" />
++      <option name="INPUT_FILE" value="" />
++      <method v="2" />
++    </configuration>
++    <recent_temporary>
++      <list>
++        <item itemvalue="Python.main" />
++      </list>
++    </recent_temporary>
++  </component>
++  <component name="SharedIndexes">
++    <attachedChunks>
++      <set>
++        <option value="bundled-js-predefined-d6986cc7102b-5c90d61e3bab-JavaScript-PY-242.23726.102" />
++        <option value="bundled-python-sdk-5e1850174b45-399fe30bd8c1-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.23726.102" />
++      </set>
++    </attachedChunks>
++  </component>
++  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
++  <component name="TaskManager">
++    <task active="true" id="Default" summary="Default task">
++      <changelist id="88ca1a4c-7b7f-447c-a398-c23514ea4e9b" name="Changes" comment="" />
++      <created>1729845079455</created>
++      <option name="number" value="Default" />
++      <option name="presentableId" value="Default" />
++      <updated>1729845079455</updated>
++      <workItem from="1729845086977" duration="4127000" />
++      <workItem from="1729853511426" duration="1754000" />
++    </task>
++    <servers />
++  </component>
++  <component name="TypeScriptGeneratedFilesManager">
++    <option name="version" value="3" />
++  </component>
++  <component name="Vcs.Log.Tabs.Properties">
++    <option name="TAB_STATES">
++      <map>
++        <entry key="MAIN">
++          <value>
++            <State />
++          </value>
++        </entry>
++      </map>
++    </option>
++  </component>
++  <component name="com.intellij.coverage.CoverageDataManagerImpl">
++    <SUITE FILE_PATH="coverage/AutoLogin$main.coverage" NAME="main Coverage Results" MODIFIED="1729853529002" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
++  </component>
++</project>
+\ No newline at end of file
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+new file mode 100644
+--- /dev/null	(date 1729846119066)
++++ b/.idea/misc.xml	(date 1729846119066)
+@@ -0,0 +1,7 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="Black">
++    <option name="sdkName" value="Python 3.10 (AutoLogin)" />
++  </component>
++  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.10 (AutoLogin)" project-jdk-type="Python SDK" />
++</project>
+\ No newline at end of file
+Index: .idea/vcs.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/vcs.xml b/.idea/vcs.xml
+new file mode 100644
+--- /dev/null	(date 1729845090640)
++++ b/.idea/vcs.xml	(date 1729845090640)
+@@ -0,0 +1,6 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project version="4">
++  <component name="VcsDirectoryMappings">
++    <mapping directory="$PROJECT_DIR$" vcs="Git" />
++  </component>
++</project>
+\ No newline at end of file
+diff --git a/README.md b/README.md
+new file mode 100644
