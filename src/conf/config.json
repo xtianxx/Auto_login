@@ -4,8 +4,8 @@
         "运营商": "dx yd ld"
     },
     "UserInfo": {
-        "userid": "your_userid",
-        "passwd": "your_passwd",
+        "userid": "yourid",
+        "passwd": "yourpasswd",
         "wlanacname": "XXXY-New-BRAS"
     }
 }
